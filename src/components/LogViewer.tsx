@@ -165,7 +165,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({
       <div 
         ref={logsContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto bg-gray-900 p-4 font-mono text-sm h-0"
+        className="flex-1 overflow-y-auto bg-gray-900 p-4 font-mono text-sm min-h-0"
+        style={{ maxHeight: 'calc(100vh - 16rem)' }}
       >
         {error && (
           <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md flex items-center gap-3">
