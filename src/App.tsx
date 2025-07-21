@@ -72,9 +72,9 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 h-[calc(100vh-12rem)]">
           {/* Container Selector */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1">
             <ContainerSelector
               containers={containers}
               filterInfo={filterInfo}
@@ -87,7 +87,7 @@ function App() {
           </div>
 
           {/* Log Viewer */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-3">
             <LogViewer
               logs={logs}
               containerName={selectedContainer}

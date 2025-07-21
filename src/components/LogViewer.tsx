@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LogEntry } from '../types/Container';
-import { Terminal, Search, Trash2, Download, Pause, Play } from 'lucide-react';
+import { Terminal, Search, Trash2, Download, Pause, Play, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 interface LogViewerProps {
   logs: LogEntry[];
@@ -54,13 +54,39 @@ export const LogViewer: React.FC<LogViewerProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const getLogLevelColor = (logData: string) => {
+  const getLogLevel = (logData: string) => {
     const lower = logData.toLowerCase();
-    if (lower.includes('error') || lower.includes('err')) return 'text-red-400';
-    if (lower.includes('warn') || lower.includes('warning')) return 'text-yellow-400';
-    if (lower.includes('info')) return 'text-blue-400';
-    if (lower.includes('debug')) return 'text-gray-400';
-    return 'text-green-400';
+    if (lower.includes('error') || lower.includes('err') || lower.includes('fatal') || lower.includes('exception')) {
+      return { level: 'error', color: 'text-red-400', bg: 'bg-red-900/20', icon: AlertCircle };
+    }
+    if (lower.includes('warn') || lower.includes('warning')) {
+      return { level: 'warning', color: 'text-yellow-400', bg: 'bg-yellow-900/20', icon: AlertTriangle };
+    }
+    if (lower.includes('info') || lower.includes('information')) {
+      return { level: 'info', color: 'text-blue-400', bg: 'bg-blue-900/20', icon: Info };
+    }
+    if (lower.includes('debug') || lower.includes('trace')) {
+      return { level: 'debug', color: 'text-gray-400', bg: 'bg-gray-900/20', icon: Terminal };
+    }
+    return { level: 'log', color: 'text-green-400', bg: 'bg-green-900/20', icon: Terminal };
+  };
+
+  const formatLogMessage = (message: string) => {
+    // Split message into timestamp and content if it contains timestamp
+    const timestampRegex = /^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)\s*(.*)$/;
+    const match = message.match(timestampRegex);
+    
+    if (match) {
+      return {
+        timestamp: match[1],
+        content: match[2] || message
+      };
+    }
+    
+    return {
+      timestamp: null,
+      content: message
+    };
   };
 
   const getConnectionStatusColor = () => {
@@ -72,7 +98,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
         <div className="flex items-center justify-between">
@@ -139,10 +165,11 @@ export const LogViewer: React.FC<LogViewerProps> = ({
       <div 
         ref={logsContainerRef}
         onScroll={handleScroll}
-        className="h-96 overflow-y-auto bg-gray-900 p-4 font-mono text-sm"
+        className="flex-1 overflow-y-auto bg-gray-900 p-4 font-mono text-sm min-h-[500px]"
       >
         {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
+          <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
             <p className="text-red-300">{error}</p>
           </div>
         )}
@@ -157,7 +184,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
         ) : filteredLogs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             <div className="text-center">
-              <p>
+              <p className="text-lg">
                 {searchTerm ? `No logs found matching "${searchTerm}"` : 'No logs available'}
               </p>
             </div>
@@ -165,15 +192,38 @@ export const LogViewer: React.FC<LogViewerProps> = ({
         ) : (
           <>
             {filteredLogs.map((log, index) => (
-              <div key={index} className="mb-1 break-words">
-                <span className="text-gray-400 text-xs">
-                  [{new Date(log.timestamp).toLocaleTimeString()}]
-                </span>
-                <span className={`ml-2 ${getLogLevelColor(log.data || '')}`}>
-                  {log.data || log.message}
-                </span>
-              </div>
-            ))}
+              const logLevel = getLogLevel(log.data || '');
+              const formatted = formatLogMessage(log.data || log.message || '');
+              const LogIcon = logLevel.icon;
+              
+                <div 
+                  key={index} 
+                  className={`mb-2 p-3 rounded-md border-l-4 ${logLevel.bg} border-l-${logLevel.color.replace('text-', '')}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <LogIcon className={`w-4 h-4 ${logLevel.color} flex-shrink-0 mt-0.5`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-gray-400 text-xs font-medium">
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${logLevel.bg} ${logLevel.color} border border-current/20`}>
+                          {logLevel.level.toUpperCase()}
+                        </span>
+                        {formatted.timestamp && (
+                          <span className="text-gray-500 text-xs">
+                            {formatted.timestamp}
+                          </span>
+                        )}
+                      </div>
+                      <div className={`${logLevel.color} break-words leading-relaxed`}>
+                        {formatted.content}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
             <div ref={logsEndRef} />
           </>
         )}
