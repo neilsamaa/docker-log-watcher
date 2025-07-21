@@ -1,8 +1,29 @@
 {
   "name": "docker-log-monitor",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
+  "description": "A real-time web-based Docker container log monitoring application.",
+  "keywords": [
+    "docker",
+    "logging",
+    "docker",
+    "log",
+    "docker",
+    "container",
+    "log"
+  ],
+  "homepage": "https://github.com/neilsamaa/docker-log-watcher#readme",
+  "bugs": {
+    "url": "https://github.com/neilsamaa/docker-log-watcher/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neilsamaa/docker-log-watcher.git"
+  },
+  "license": "ISC",
+  "author": "Mirza Maulana Azmi",
   "type": "module",
+  "main": "eslint.config.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "vite",
