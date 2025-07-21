@@ -73,7 +73,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
 
   const formatLogMessage = (message: string) => {
     // Split message into timestamp and content if it contains timestamp
-    const timestampRegex = /^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)\s*(.*)$/;
+    const timestampRegex = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?)\s*(.*)$/;
     const match = message.match(timestampRegex);
     
     if (match) {
