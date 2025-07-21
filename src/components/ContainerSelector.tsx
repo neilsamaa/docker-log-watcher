@@ -34,7 +34,7 @@ export const ContainerSelector: React.FC<ContainerSelectorProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Server className="w-5 h-5 text-blue-600" />
@@ -69,7 +69,7 @@ export const ContainerSelector: React.FC<ContainerSelectorProps> = ({
         </div>
       )}
 
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="space-y-2 flex-1 overflow-y-auto">
         {containers.length === 0 && !loading ? (
           <div className="text-center py-8 text-gray-500">
             <Server className="w-12 h-12 mx-auto mb-2 opacity-50" />

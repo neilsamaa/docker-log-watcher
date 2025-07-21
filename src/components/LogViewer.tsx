@@ -98,9 +98,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
+    <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden h-full flex flex-col max-h-full">
       {/* Header */}
-      <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
+      <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Terminal className="w-5 h-5 text-green-400" />
@@ -165,7 +165,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
       <div 
         ref={logsContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto bg-gray-900 p-4 font-mono text-sm min-h-[500px]"
+        className="flex-1 overflow-y-auto bg-gray-900 p-4 font-mono text-sm h-0"
       >
         {error && (
           <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md flex items-center gap-3">
