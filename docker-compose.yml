@@ -12,6 +12,10 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      # Container filtering options:
+      # Leave empty or set to "all" to show all containers
+      # Set specific container names separated by commas: "app1,app2,database"
+      - MONITORED_CONTAINERS=all
     restart: unless-stopped
     networks:
       - monitoring

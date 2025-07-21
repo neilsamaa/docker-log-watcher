@@ -11,7 +11,7 @@ const WS_URL = process.env.NODE_ENV === 'production'
 
 function App() {
   const [selectedContainer, setSelectedContainer] = useState<string>('');
-  const { containers, loading, error, refetch } = useContainers();
+  const { containers, filterInfo, loading, error, refetch } = useContainers();
   const { 
     logs, 
     connectionStatus, 
@@ -77,6 +77,7 @@ function App() {
           <div className="lg:col-span-1">
             <ContainerSelector
               containers={containers}
+              filterInfo={filterInfo}
               selectedContainer={selectedContainer}
               onContainerSelect={handleContainerSelect}
               onRefresh={refetch}

@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Container } from '../types/Container';
 
+interface ContainerResponse {
+  containers: Container[];
+  filter: string;
+  total: number;
+  filtered: number;
+}
+
 const API_BASE = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001';
 
 export const useContainers = () => {
   const [containers, setContainers] = useState<Container[]>([]);
+  const [filterInfo, setFilterInfo] = useState<{ filter: string; total: number; filtered: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +26,23 @@ export const useContainers = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setContainers(data);
+      
+      if (data.containers) {
+        setContainers(data.containers);
+        setFilterInfo({
+          filter: data.filter,
+          total: data.total,
+          filtered: data.filtered
+        });
+      } else {
+        // Fallback for old API response format
+        setContainers(Array.isArray(data) ? data : []);
+        setFilterInfo(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch containers');
       setContainers([]);
+      setFilterInfo(null);
     } finally {
       setLoading(false);
     }
@@ -37,6 +58,7 @@ export const useContainers = () => {
 
   return {
     containers,
+    filterInfo,
     loading,
     error,
     refetch: fetchContainers

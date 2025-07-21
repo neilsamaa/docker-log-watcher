@@ -51,6 +51,31 @@ try {
 app.use(cors());
 app.use(express.json());
 
+// Get monitored containers from environment
+const getMonitoredContainers = () => {
+  const monitored = process.env.MONITORED_CONTAINERS || 'all';
+  if (monitored.toLowerCase() === 'all' || monitored.trim() === '') {
+    return null; // Return null to indicate all containers
+  }
+  return monitored.split(',').map(name => name.trim()).filter(name => name.length > 0);
+};
+
+// Filter containers based on configuration
+const filterContainers = (containers) => {
+  const monitoredContainers = getMonitoredContainers();
+  
+  if (!monitoredContainers) {
+    return containers; // Return all containers
+  }
+  
+  return containers.filter(container => {
+    const containerName = container.Names[0].replace('/', '');
+    return monitoredContainers.some(monitored => 
+      containerName.includes(monitored) || monitored.includes(containerName)
+    );
+  });
+};
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
@@ -59,8 +84,17 @@ if (process.env.NODE_ENV === 'production') {
 // API endpoint to get running containers
 app.get('/api/containers', async (req, res) => {
   try {
+    if (!dockerAvailable) {
+      return res.status(503).json({ 
+        error: 'Docker is not available. Please ensure Docker is running and accessible.',
+        containers: []
+      });
+    }
+    
     const containers = await docker.listContainers();
-    const containerInfo = containers.map(container => ({
+    const filteredContainers = filterContainers(containers);
+    
+    const containerInfo = filteredContainers.map(container => ({
       id: container.Id,
       name: container.Names[0].replace('/', ''),
       image: container.Image,
@@ -68,7 +102,14 @@ app.get('/api/containers', async (req, res) => {
       state: container.State,
       created: container.Created
     }));
-    res.json(containerInfo);
+    
+    const monitoredContainers = getMonitoredContainers();
+    res.json({
+      containers: containerInfo,
+      filter: monitoredContainers ? monitoredContainers.join(', ') : 'all',
+      total: containers.length,
+      filtered: containerInfo.length
+    });
   } catch (error) {
     console.error('Error fetching containers:', error);
     res.status(500).json({ error: 'Failed to fetch containers' });

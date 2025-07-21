@@ -4,6 +4,7 @@ import { RefreshCw, Server, Play, Square } from 'lucide-react';
 
 interface ContainerSelectorProps {
   containers: Container[];
+  filterInfo: { filter: string; total: number; filtered: number } | null;
   selectedContainer: string;
   onContainerSelect: (containerName: string) => void;
   onRefresh: () => void;
@@ -13,6 +14,7 @@ interface ContainerSelectorProps {
 
 export const ContainerSelector: React.FC<ContainerSelectorProps> = ({
   containers,
+  filterInfo,
   selectedContainer,
   onContainerSelect,
   onRefresh,
@@ -47,6 +49,19 @@ export const ContainerSelector: React.FC<ContainerSelectorProps> = ({
           Refresh
         </button>
       </div>
+
+      {filterInfo && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-blue-700">
+              <strong>Filter:</strong> {filterInfo.filter}
+            </span>
+            <span className="text-blue-600">
+              Showing {filterInfo.filtered} of {filterInfo.total} containers
+            </span>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">

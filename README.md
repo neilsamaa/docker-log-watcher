@@ -36,6 +36,9 @@ docker-compose up --build -d
 # View logs
 docker-compose logs -f docker-log-monitor
 
+# To monitor specific containers, edit docker-compose.yml:
+# MONITORED_CONTAINERS=nginx,postgres,redis
+
 # Stop services
 docker-compose down
 ```
@@ -75,6 +78,10 @@ npm run build:docker
 - `NODE_ENV`: Set to 'production' for production builds
 - `PORT`: Server port (default: 3001)
 - `DOCKER_SOCKET_PATH`: Path to Docker socket (default: /var/run/docker.sock)
+- `MONITORED_CONTAINERS`: Container filter configuration
+  - `all` or empty: Show all containers (default)
+  - `container1,container2`: Show only specified containers
+  - Supports partial name matching
 
 ## Docker Socket Access
 
