@@ -1,5 +1,4 @@
-version: '3.8'
-
+---
 services:
   docker-log-monitor:
     build: .
@@ -25,16 +24,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Example application to monitor (optional)
-  example-app:
-    image: nginx:alpine
-    container_name: example-nginx
-    ports:
-      - "8080:80"
-    networks:
-      - monitoring
-    restart: unless-stopped
 
 networks:
   monitoring:
