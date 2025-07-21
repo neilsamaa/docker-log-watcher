@@ -191,11 +191,12 @@ export const LogViewer: React.FC<LogViewerProps> = ({
           </div>
         ) : (
           <>
-            {filteredLogs.map((log, index) => (
+            {filteredLogs.map((log, index) => {
               const logLevel = getLogLevel(log.data || '');
               const formatted = formatLogMessage(log.data || log.message || '');
               const LogIcon = logLevel.icon;
               
+              return (
                 <div 
                   key={index} 
                   className={`mb-2 p-3 rounded-md border-l-4 ${logLevel.bg} border-l-${logLevel.color.replace('text-', '')}`}
