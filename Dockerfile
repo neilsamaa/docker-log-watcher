@@ -3,25 +3,15 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm ci --only=production
+# Copy the rest of the application code
+COPY . .
 
-# Copy server code
-COPY server/ ./server/
-
-# Copy built React app
-COPY dist/ ./dist/
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+# Build the React app
+RUN npm run build
 
 # Expose port
 EXPOSE 3001
