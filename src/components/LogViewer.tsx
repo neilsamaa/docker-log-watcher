@@ -25,23 +25,28 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredLogs = logs.filter(log => {
-    // Get the log text content
-    const logText = (log.data || log.message || '').toString();
-    if (!logText.trim()) return false;
-    
-    // Check search term match
-    const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // If showing all logs, just check search term
-    if (logLevelFilter === 'all') {
-      return matchesSearch;
+    try {
+      // Get the log text content
+      const logText = (log.data || log.message || '').toString();
+      if (!logText.trim()) return false;
+      
+      // Check search term match
+      const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // If showing all logs, just check search term
+      if (logLevelFilter === 'all') {
+        return matchesSearch;
+      }
+      
+      // Get log level and check filter match
+      const detectedLevel = getLogLevel(logText);
+      const matchesLevel = detectedLevel.level === logLevelFilter;
+      
+      return matchesSearch && matchesLevel;
+    } catch (error) {
+      console.error('Error filtering log:', error);
+      return false;
     }
-    
-    // Get log level and check filter match
-    const detectedLevel = getLogLevel(logText);
-    const matchesLevel = detectedLevel.level === logLevelFilter;
-    
-    return matchesSearch && matchesLevel;
   });
 
   useEffect(() => {
@@ -258,39 +263,44 @@ export const LogViewer: React.FC<LogViewerProps> = ({
         ) : (
           <>
             {filteredLogs.map((log, index) => {
-              const logText = (log.data || log.message || '').toString();
-              const logLevel = getLogLevel(logText);
-              const formatted = formatLogMessage(logText);
-              const LogIcon = logLevel.icon;
+              try {
+                const logText = (log.data || log.message || '').toString();
+                const logLevel = getLogLevel(logText);
+                const formatted = formatLogMessage(logText);
+                const LogIcon = logLevel.icon;
               
-              return (
-                <div 
-                  key={index} 
-                  className={`mb-2 p-3 rounded-md border-l-4 ${logLevel.bg} border-l-${logLevel.color.replace('text-', '')}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <LogIcon className={`w-4 h-4 ${logLevel.color} flex-shrink-0 mt-0.5`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-gray-400 text-xs font-medium">
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${logLevel.bg} ${logLevel.color} border border-current/20`}>
-                          {logLevel.level.toUpperCase()}
-                        </span>
-                        {formatted.timestamp && (
-                          <span className="text-gray-500 text-xs">
-                            {formatted.timestamp}
+                return (
+                  <div 
+                    key={index} 
+                    className={`mb-2 p-3 rounded-md border-l-4 ${logLevel.bg} border-l-${logLevel.color.replace('text-', '')}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <LogIcon className={`w-4 h-4 ${logLevel.color} flex-shrink-0 mt-0.5`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-gray-400 text-xs font-medium">
+                            {new Date(log.timestamp).toLocaleTimeString()}
                           </span>
-                        )}
-                      </div>
-                      <div className={`${logLevel.color} break-words leading-relaxed`}>
-                        {formatted.content}
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${logLevel.bg} ${logLevel.color} border border-current/20`}>
+                            {logLevel.level.toUpperCase()}
+                          </span>
+                          {formatted.timestamp && (
+                            <span className="text-gray-500 text-xs">
+                              {formatted.timestamp}
+                            </span>
+                          )}
+                        </div>
+                        <div className={`${logLevel.color} break-words leading-relaxed`}>
+                          {formatted.content}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
+              } catch (error) {
+                console.error('Error rendering log:', error);
+                return null;
+              }
             })}
             <div ref={logsEndRef} />
           </>
