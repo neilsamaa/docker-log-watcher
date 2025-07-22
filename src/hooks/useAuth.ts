@@ -15,7 +15,10 @@ export const useAuth = () => {
   const checkAuth = async () => {
     try {
       const response = await fetch(`${API_BASE}/api/verify`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       if (response.ok) {
@@ -25,8 +28,9 @@ export const useAuth = () => {
         setUser(null);
       }
     } catch (err) {
-      console.error('Auth check failed:', err);
+      console.error('Auth check failed:', err instanceof Error ? err.message : 'Unknown error');
       setUser(null);
+      setError('Unable to connect to server. Please check if the backend is running.');
     } finally {
       setLoading(false);
     }
