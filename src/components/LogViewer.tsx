@@ -25,28 +25,24 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredLogs = logs.filter(log => {
-    try {
-      // Get the log text content
-      const logText = (log.data || log.message || '').toString();
-      if (!logText.trim()) return false;
-      
-      // Check search term match
-      const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // If showing all logs, just check search term
-      if (logLevelFilter === 'all') {
-        return matchesSearch;
-      }
-      
-      // Get log level and check filter match
-      const detectedLevel = getLogLevel(logText);
-      const matchesLevel = detectedLevel.level === logLevelFilter;
-      
-      return matchesSearch && matchesLevel;
-    } catch (error) {
-      console.error('Error filtering log:', error);
-      return false;
+    const logText = (log.data || log.message || '').toString();
+    if (!logText.trim()) return false;
+
+    const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (logLevelFilter === 'all') {
+      return matchesSearch;
     }
+
+    // For 'log', exclude all other levels
+    if (logLevelFilter === 'log') {
+      const otherLevels = ['error', 'warn', 'warning', 'info', 'information', 'debug', 'trace', 'fatal', 'exception'];
+      const isOtherLevel = otherLevels.some(lvl => logText.toLowerCase().includes(lvl));
+      return matchesSearch && !isOtherLevel;
+    }
+
+    // For other levels, grep the value in the log text
+    return matchesSearch && logText.toLowerCase().includes(logLevelFilter);
   });
 
   useEffect(() => {
