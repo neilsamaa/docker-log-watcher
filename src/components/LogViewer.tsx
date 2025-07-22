@@ -25,17 +25,21 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredLogs = logs.filter(log => {
-    if (!log.data && !log.message) return false;
+    // Get the log text content
+    const logText = (log.data || log.message || '').toString();
+    if (!logText.trim()) return false;
     
-    const logText = log.data || log.message || '';
+    // Check search term match
     const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // If showing all logs, just check search term
     if (logLevelFilter === 'all') {
       return matchesSearch;
     }
     
-    const logLevel = getLogLevel(logText).level;
-    const matchesLevel = logLevel === logLevelFilter;
+    // Get log level and check filter match
+    const detectedLevel = getLogLevel(logText);
+    const matchesLevel = detectedLevel.level === logLevelFilter;
     
     return matchesSearch && matchesLevel;
   });
@@ -254,8 +258,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({
         ) : (
           <>
             {filteredLogs.map((log, index) => {
-              const logLevel = getLogLevel(log.data || '');
-              const formatted = formatLogMessage(log.data || log.message || '');
+              const logText = (log.data || log.message || '').toString();
+              const logLevel = getLogLevel(logText);
+              const formatted = formatLogMessage(logText);
               const LogIcon = logLevel.icon;
               
               return (
