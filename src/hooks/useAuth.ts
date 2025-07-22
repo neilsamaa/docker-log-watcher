@@ -14,10 +14,18 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_BASE}/api/verify`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -25,10 +33,12 @@ export const useAuth = () => {
         const data = await response.json();
         setUser(data.user);
       } else {
+        localStorage.removeItem('token');
         setUser(null);
       }
     } catch (err) {
       console.error('Auth check failed:', err instanceof Error ? err.message : 'Unknown error');
+      localStorage.removeItem('token');
       setUser(null);
       setError('Unable to connect to server. Please check if the backend is running.');
     } finally {

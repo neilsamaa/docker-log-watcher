@@ -22,8 +22,18 @@ export const useContainers = () => {
     setError(null);
     
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE}/api/containers`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
