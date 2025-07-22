@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LogEntry } from '../types/Container';
-import { Terminal, Search, Trash2, Download, Pause, Play, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { Terminal, Search, Trash2, Download, Pause, Play, AlertCircle, Info, AlertTriangle, Filter } from 'lucide-react';
 
 interface LogViewerProps {
   logs: LogEntry[];
@@ -19,12 +19,23 @@ export const LogViewer: React.FC<LogViewerProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
+  const [logLevelFilter, setLogLevelFilter] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredLogs = logs.filter(log => 
-    log.data?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = log.data?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (logLevelFilter === 'all') {
+      return matchesSearch;
+    }
+    
+    const logLevel = getLogLevel(log.data || '').level;
+    const matchesLevel = logLevel === logLevelFilter;
+    
+    return matchesSearch && matchesLevel;
+  });
 
   useEffect(() => {
     if (autoScroll && logsEndRef.current) {
@@ -97,6 +108,15 @@ export const LogViewer: React.FC<LogViewerProps> = ({
     }
   };
 
+  const logLevels = [
+    { value: 'all', label: 'All Logs', color: 'text-gray-600' },
+    { value: 'error', label: 'Error', color: 'text-red-600' },
+    { value: 'warning', label: 'Warning', color: 'text-yellow-600' },
+    { value: 'info', label: 'Info', color: 'text-blue-600' },
+    { value: 'debug', label: 'Debug', color: 'text-gray-600' },
+    { value: 'log', label: 'Log', color: 'text-green-600' }
+  ];
+
   return (
     <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden h-full flex flex-col max-h-full">
       {/* Header */}
@@ -149,14 +169,52 @@ export const LogViewer: React.FC<LogViewerProps> = ({
 
         {containerName && (
           <div className="mt-3 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search logs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white placeholder-gray-400 rounded-md border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-            />
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white placeholder-gray-400 rounded-md border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-3 py-2 rounded-md transition-colors flex items-center gap-2 ${
+                  showFilters || logLevelFilter !== 'all'
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                Filter
+              </button>
+            </div>
+            
+            {showFilters && (
+              <div className="mt-2 p-3 bg-gray-800 rounded-md border border-gray-600">
+                <div className="flex flex-wrap gap-2">
+                  {logLevels.map((level) => (
+                    <button
+                      key={level.value}
+                      onClick={() => setLogLevelFilter(level.value)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        logLevelFilter === level.value
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {level.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 text-xs text-gray-400">
+                  Showing {filteredLogs.length} of {logs.length} logs
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

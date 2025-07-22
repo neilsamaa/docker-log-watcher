@@ -4,6 +4,7 @@ import { Container } from '../types/Container';
 interface ContainerResponse {
   containers: Container[];
   filter: string;
+  states: string;
   total: number;
   filtered: number;
 }
@@ -12,7 +13,7 @@ const API_BASE = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:
 
 export const useContainers = () => {
   const [containers, setContainers] = useState<Container[]>([]);
-  const [filterInfo, setFilterInfo] = useState<{ filter: string; total: number; filtered: number } | null>(null);
+  const [filterInfo, setFilterInfo] = useState<{ filter: string; states: string; total: number; filtered: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,9 @@ export const useContainers = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${API_BASE}/api/containers`);
+      const response = await fetch(`${API_BASE}/api/containers`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -31,6 +34,7 @@ export const useContainers = () => {
         setContainers(data.containers);
         setFilterInfo({
           filter: data.filter,
+          states: data.states,
           total: data.total,
           filtered: data.filtered
         });
@@ -40,7 +44,12 @@ export const useContainers = () => {
         setFilterInfo(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch containers');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch containers';
+      if (errorMessage.includes('401')) {
+        setError('Authentication required. Please login again.');
+      } else {
+        setError(errorMessage);
+      }
       setContainers([]);
       setFilterInfo(null);
     } finally {

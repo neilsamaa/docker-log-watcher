@@ -15,6 +15,13 @@ services:
       # Leave empty or set to "all" to show all containers
       # Set specific container names separated by commas: "app1,app2,database"
       - MONITORED_CONTAINERS=all
+      # Container state filtering (all, running, stopped, exited, paused, healthy, etc)
+      - CONTAINER_STATES=all
+      # Authentication credentials
+      - AUTH_USERNAME=admin
+      - AUTH_PASSWORD=docker123
+      # JWT secret for secure websocket
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
     restart: unless-stopped
     networks:
       - monitoring

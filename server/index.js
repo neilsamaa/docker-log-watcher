@@ -6,6 +6,9 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import cookieParser from 'cookie-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +16,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
+
+// Environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
+const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
+const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'admin';
+
+// Hash the password for comparison
+const hashedPassword = bcrypt.hashSync(AUTH_PASSWORD, 10);
 
 // Function to get Docker configuration based on platform
 function getDockerConfig() {
@@ -48,8 +59,29 @@ try {
   dockerAvailable = false;
 }
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+};
 
 // Get monitored containers from environment
 const getMonitoredContainers = () => {
@@ -60,20 +92,40 @@ const getMonitoredContainers = () => {
   return monitored.split(',').map(name => name.trim()).filter(name => name.length > 0);
 };
 
+// Get container states from environment
+const getContainerStates = () => {
+  const states = process.env.CONTAINER_STATES || 'all';
+  if (states.toLowerCase() === 'all' || states.trim() === '') {
+    return null; // Return null to indicate all states
+  }
+  return states.split(',').map(state => state.trim().toLowerCase()).filter(state => state.length > 0);
+};
+
 // Filter containers based on configuration
 const filterContainers = (containers) => {
   const monitoredContainers = getMonitoredContainers();
+  const containerStates = getContainerStates();
   
-  if (!monitoredContainers) {
-    return containers; // Return all containers
+  let filtered = containers;
+  
+  // Filter by container names
+  if (monitoredContainers) {
+    filtered = filtered.filter(container => {
+      const containerName = container.Names[0].replace('/', '');
+      return monitoredContainers.some(monitored => 
+        containerName.includes(monitored) || monitored.includes(containerName)
+      );
+    });
   }
   
-  return containers.filter(container => {
-    const containerName = container.Names[0].replace('/', '');
-    return monitoredContainers.some(monitored => 
-      containerName.includes(monitored) || monitored.includes(containerName)
-    );
-  });
+  // Filter by container states
+  if (containerStates) {
+    filtered = filtered.filter(container => {
+      return containerStates.includes(container.State.toLowerCase());
+    });
+  }
+  
+  return filtered;
 };
 
 // Serve static files in production
@@ -81,8 +133,47 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
 }
 
-// API endpoint to get running containers
-app.get('/api/containers', async (req, res) => {
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+  
+  if (username !== AUTH_USERNAME || !bcrypt.compareSync(password, hashedPassword)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  const token = jwt.sign(
+    { username, timestamp: Date.now() },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+  
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  });
+  
+  res.json({ success: true, token });
+});
+
+// Logout endpoint
+app.post('/api/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ success: true });
+});
+
+// Verify token endpoint
+app.get('/api/verify', authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
+});
+
+// API endpoint to get running containers (protected)
+app.get('/api/containers', authenticateToken, async (req, res) => {
   try {
     if (!dockerAvailable) {
       return res.status(503).json({ 
@@ -91,7 +182,7 @@ app.get('/api/containers', async (req, res) => {
       });
     }
     
-    const containers = await docker.listContainers();
+    const containers = await docker.listContainers({ all: true });
     const filteredContainers = filterContainers(containers);
     
     const containerInfo = filteredContainers.map(container => ({
@@ -104,9 +195,12 @@ app.get('/api/containers', async (req, res) => {
     }));
     
     const monitoredContainers = getMonitoredContainers();
+    const containerStates = getContainerStates();
+    
     res.json({
       containers: containerInfo,
       filter: monitoredContainers ? monitoredContainers.join(', ') : 'all',
+      states: containerStates ? containerStates.join(', ') : 'all',
       total: containers.length,
       filtered: containerInfo.length
     });
@@ -116,14 +210,54 @@ app.get('/api/containers', async (req, res) => {
   }
 });
 
-// WebSocket connection for real-time logs
-wss.on('connection', (ws) => {
-  console.log('Client connected for log monitoring');
+// WebSocket authentication
+const authenticateWebSocket = (token) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+};
+
+// WebSocket connection for real-time logs (secured)
+wss.on('connection', (ws, req) => {
+  console.log('Client attempting WebSocket connection');
   let logStream = null;
   let container = null;
+  let authenticated = false;
 
   ws.on('message', async (message) => {
     try {
+      const data = JSON.parse(message.toString());
+      
+      // Handle authentication
+      if (data.action === 'authenticate') {
+        const user = authenticateWebSocket(data.token);
+        if (user) {
+          authenticated = true;
+          ws.send(JSON.stringify({
+            type: 'authenticated',
+            message: 'WebSocket authenticated successfully'
+          }));
+        } else {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'WebSocket authentication failed'
+          }));
+          ws.close();
+        }
+        return;
+      }
+      
+      // Check authentication for other actions
+      if (!authenticated) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'WebSocket not authenticated'
+        }));
+        return;
+      }
+      
       if (!dockerAvailable) {
         ws.send(JSON.stringify({
           type: 'error',
@@ -132,8 +266,6 @@ wss.on('connection', (ws) => {
         return;
       }
       
-      const data = JSON.parse(message.toString());
-      
       if (data.action === 'start' && data.containerName) {
         // Stop previous stream if exists
         if (logStream) {
@@ -141,7 +273,7 @@ wss.on('connection', (ws) => {
         }
 
         // Find container by name
-        const containers = await docker.listContainers();
+        const containers = await docker.listContainers({ all: true });
         const targetContainer = containers.find(c => 
           c.Names.some(name => name.replace('/', '') === data.containerName)
         );
@@ -243,4 +375,5 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Docker Log Monitor server running on port ${PORT}`);
+  console.log(`Authentication: Username=${AUTH_USERNAME}`);
 });
