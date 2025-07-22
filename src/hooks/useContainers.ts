@@ -11,13 +11,19 @@ interface ContainerResponse {
 
 const API_BASE = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001';
 
-export const useContainers = () => {
+export const useContainers = (isAuthenticated: boolean) => {
   const [containers, setContainers] = useState<Container[]>([]);
   const [filterInfo, setFilterInfo] = useState<{ filter: string; states: string; total: number; filtered: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchContainers = async () => {
+    if (!isAuthenticated) {
+      setContainers([]);
+      setFilterInfo(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
@@ -68,12 +74,18 @@ export const useContainers = () => {
   };
 
   useEffect(() => {
-    fetchContainers();
+    if (isAuthenticated) {
+      fetchContainers();
+    }
     
     // Refresh containers every 30 seconds
-    const interval = setInterval(fetchContainers, 30000);
+    const interval = setInterval(() => {
+      if (isAuthenticated) {
+        fetchContainers();
+      }
+    }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
   return {
     containers,

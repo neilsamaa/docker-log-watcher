@@ -25,13 +25,16 @@ export const LogViewer: React.FC<LogViewerProps> = ({
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.data?.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!log.data && !log.message) return false;
+    
+    const logText = log.data || log.message || '';
+    const matchesSearch = logText.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (logLevelFilter === 'all') {
       return matchesSearch;
     }
     
-    const logLevel = getLogLevel(log.data || '').level;
+    const logLevel = getLogLevel(logText).level;
     const matchesLevel = logLevel === logLevelFilter;
     
     return matchesSearch && matchesLevel;

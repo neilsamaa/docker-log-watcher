@@ -14,7 +14,7 @@ const WS_URL = process.env.NODE_ENV === 'production'
 function App() {
   const { user, loading: authLoading, error: authError, login, logout, getToken, isAuthenticated } = useAuth();
   const [selectedContainer, setSelectedContainer] = useState<string>('');
-  const { containers, filterInfo, loading, error, refetch } = useContainers();
+  const { containers, filterInfo, loading, error, refetch } = useContainers(isAuthenticated);
   const { 
     logs, 
     connectionStatus, 
