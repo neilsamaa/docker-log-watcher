@@ -1,8 +1,8 @@
 ---
 services:
-  docker-log-monitor:
+  docklens:
     build: .
-    container_name: docker-log-monitor
+    container_name: docklens
     ports:
       - "3001:3001"
     volumes:
@@ -19,7 +19,7 @@ services:
       - CONTAINER_STATES=all
       # Authentication credentials
       - AUTH_USERNAME=admin
-      - AUTH_PASSWORD=docker123
+      - AUTH_PASSWORD=changeme
       # JWT secret for secure websocket
       - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
     restart: unless-stopped

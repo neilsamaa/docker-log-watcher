@@ -1,4 +1,4 @@
-# Docker Log Monitor
+# DockeLens
 
 A real-time web-based Docker container log monitoring application with manual container selection.
 
@@ -38,7 +38,7 @@ npm run dev
 docker-compose up --build -d
 
 # View logs
-docker-compose logs -f docker-log-monitor
+docker-compose logs -f docklens
 
 # To monitor specific containers, edit docker-compose.yml:
 # MONITORED_CONTAINERS=nginx,postgres,redis
@@ -54,14 +54,14 @@ docker-compose down
 npm run build
 
 # Build Docker image
-docker build -t docker-log-monitor .
+docker build -t docklens .
 
 # Run container
 docker run -d \
-  --name docker-log-monitor \
+  --name docklens \
   -p 3001:3001 \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  docker-log-monitor
+  docklens
 ```
 
 ### Production Commands
@@ -96,7 +96,7 @@ npm run build:docker
 
 ### Authentication & Security
 - `AUTH_USERNAME`: Login username (default: admin)
-- `AUTH_PASSWORD`: Login password (default: docker123)
+- `AUTH_PASSWORD`: Login password (default: changeme)
 - `JWT_SECRET`: Secret key for JWT tokens (default: auto-generated, change in production)
 
 ## Docker Socket Access

@@ -1,5 +1,5 @@
 {
-  "name": "docker-log-monitor",
+  "name": "docklens",
   "version": "1.0.0",
   "private": true,
   "description": "A real-time web-based Docker container log monitoring application.",
@@ -12,13 +12,13 @@
     "container",
     "log"
   ],
-  "homepage": "https://github.com/neilsamaa/docker-log-watcher#readme",
+  "homepage": "https://github.com/neilsamaa/docklens#readme",
   "bugs": {
-    "url": "https://github.com/neilsamaa/docker-log-watcher/issues"
+    "url": "https://github.com/neilsamaa/docklens/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/neilsamaa/docker-log-watcher.git"
+    "url": "git+https://github.com/neilsamaa/docklens.git"
   },
   "license": "ISC",
   "author": "Mirza Maulana Azmi",
