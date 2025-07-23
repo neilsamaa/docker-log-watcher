@@ -66,9 +66,10 @@ export const useWebSocket = (url: string, token: string | null) => {
   };
 
   const sendMessage = (message: any) => {
-    if (ws.current?.readyState === WebSocket.OPEN && connectionStatus === 'connected') {
-      ws.current.send(JSON.stringify(message));
-    }
+    ws.current?.send(JSON.stringify(message));
+    // if (ws.current?.readyState === WebSocket.OPEN && connectionStatus === 'connected') {
+    //   ws.current.send(JSON.stringify(message));
+    // }
   };
 
   const clearLogs = () => {
