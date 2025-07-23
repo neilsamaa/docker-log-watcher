@@ -8,9 +8,9 @@ import { useWebSocket } from './hooks/useWebSocket';
 import { Monitor, LogOut, User } from 'lucide-react';
 import HeaderLogo from './assets/header-logo.png';
 
-const WS_URL = process.env.NODE_ENV === 'production' 
-  ? `ws://${window.location.host}/ws` 
-  : 'ws://localhost:3001';
+const WS_URL = window.location.protocol === 'https:'
+  ? `wss://${window.location.host}/ws`
+  : `ws://${window.location.host}/ws`;
 
 function App() {
   const { user, loading: authLoading, error: authError, login, logout, getToken, isAuthenticated } = useAuth();
@@ -58,7 +58,7 @@ function App() {
       connect();
       setTimeout(() => {
         sendMessage({ action: 'start', containerName });
-      }, 100);
+      }, 300);
     }
   };
 
