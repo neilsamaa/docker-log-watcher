@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import { useContainers } from './hooks/useContainers';
 import { useWebSocket } from './hooks/useWebSocket';
 import { Monitor, LogOut, User } from 'lucide-react';
+import HeaderLogo from './assets/header-logo.png';
 
 const WS_URL = process.env.NODE_ENV === 'production' 
   ? `ws://${window.location.host}/ws` 
@@ -75,8 +76,9 @@ function App() {
         <div className="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <Monitor className="w-8 h-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900">Docker Log Monitor</h1>
+              {/* <Monitor className="w-8 h-8 text-blue-600" /> */}
+              <img src={HeaderLogo} alt="DockLens Logo" className="w-[200px]" />
+              {/* <h1 className="text-xl font-bold text-gray-900">DockLens</h1> */}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">

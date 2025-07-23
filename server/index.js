@@ -374,6 +374,6 @@ if (process.env.NODE_ENV === 'production') {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Docker Log Monitor server running on port ${PORT}`);
+  console.log(`DockLens server running on port ${PORT}`);
   console.log(`Authentication: Username=${AUTH_USERNAME}`);
 });

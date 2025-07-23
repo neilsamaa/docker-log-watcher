@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Lock, User, Eye, EyeOff, Monitor } from 'lucide-react';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
+import LoginLogo from '../assets/login-logo.png';
 
 interface LoginFormProps {
   onLogin: (username: string, password: string) => Promise<void>;
@@ -23,11 +24,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading, error })
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <Monitor className="w-8 h-8 text-white" />
-            </div>
+            <img src={LoginLogo} alt="DockLens Logo" className="w-[250px]" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Docker Log Monitor</h1>
+          {/* <h1 className="text-2xl font-bold text-gray-900 mb-2">DockLens</h1> */}
           <p className="text-gray-600">Sign in to access the dashboard</p>
         </div>
 
