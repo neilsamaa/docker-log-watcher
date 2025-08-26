@@ -21,6 +21,7 @@ const wss = new WebSocketServer({ server });
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'admin';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || null;
 
 // Hash the password for comparison
 const hashedPassword = bcrypt.hashSync(AUTH_PASSWORD, 10);
@@ -170,6 +171,15 @@ app.post('/api/logout', (req, res) => {
 // Verify token endpoint
 app.get('/api/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
+});
+
+// Gemini API key endpoint (optional - for server-side key management)
+app.get('/api/gemini-key', authenticateToken, (req, res) => {
+  if (GEMINI_API_KEY) {
+    res.json({ apiKey: GEMINI_API_KEY });
+  } else {
+    res.status(404).json({ error: 'Gemini API key not configured on server' });
+  }
 });
 
 // API endpoint to get running containers (protected)

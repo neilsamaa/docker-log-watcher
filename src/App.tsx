@@ -5,6 +5,9 @@ import { LogViewer } from './components/LogViewer';
 import { useAuth } from './hooks/useAuth';
 import { useContainers } from './hooks/useContainers';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useGeminiAnalysis } from './hooks/useGeminiAnalysis';
+import { AIAnalysisPanel } from './components/AIAnalysisPanel';
+import { GeminiSetup } from './components/GeminiSetup';
 import { Monitor, LogOut, User } from 'lucide-react';
 import HeaderLogo from './assets/header-logo.png';
 
@@ -15,6 +18,9 @@ const WS_URL = window.location.protocol === 'https:'
 function App() {
   const { user, loading: authLoading, error: authError, login, logout, getToken, isAuthenticated } = useAuth();
   const [selectedContainer, setSelectedContainer] = useState<string>('');
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(
+    localStorage.getItem('gemini_api_key')
+  );
   const { containers, filterInfo, loading, error, refetch } = useContainers(isAuthenticated);
   const { 
     logs, 
@@ -25,6 +31,20 @@ function App() {
     sendMessage, 
     clearLogs 
   } = useWebSocket(WS_URL, getToken());
+  
+  const {
+    isInitialized: geminiInitialized,
+    isAnalyzing,
+    error: geminiError,
+    analysisResult,
+    performanceInsights,
+    securityAnalysis,
+    initializeService,
+    analyzeErrors,
+    generatePerformanceInsights,
+    detectSecurityThreats,
+    clearAnalysis
+  } = useGeminiAnalysis(geminiApiKey);
 
   // Show loading screen while checking authentication
   if (authLoading) {
@@ -69,6 +89,16 @@ function App() {
     clearLogs();
   };
 
+  const handleGeminiApiKeySubmit = async (apiKey: string) => {
+    setGeminiApiKey(apiKey);
+    localStorage.setItem('gemini_api_key', apiKey);
+    await initializeService();
+  };
+
+  const getLogStrings = () => {
+    return logs.map(log => log.data || log.message || '').filter(Boolean);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -107,6 +137,33 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-[100rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Gemini AI Setup */}
+          {!geminiInitialized && (
+            <GeminiSetup
+              onApiKeySubmit={handleGeminiApiKeySubmit}
+              isInitializing={isAnalyzing}
+              error={geminiError}
+              isInitialized={geminiInitialized}
+            />
+          )}
+
+          {/* AI Analysis Panel */}
+          {geminiInitialized && selectedContainer && (
+            <AIAnalysisPanel
+              logs={getLogStrings()}
+              isAnalyzing={isAnalyzing}
+              analysisResult={analysisResult}
+              performanceInsights={performanceInsights}
+              securityAnalysis={securityAnalysis}
+              error={geminiError}
+              onAnalyzeErrors={analyzeErrors}
+              onAnalyzePerformance={generatePerformanceInsights}
+              onAnalyzeSecurity={detectSecurityThreats}
+              onClearAnalysis={clearAnalysis}
+            />
+          )}
+
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
           {/* Container Selector */}
           <div className="lg:col-span-2">
@@ -131,6 +188,7 @@ function App() {
               onClearLogs={clearLogs}
             />
           </div>
+        </div>
         </div>
       </main>
     </div>

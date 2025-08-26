@@ -5,6 +5,7 @@ A real-time web-based Docker container log monitoring application with manual co
 ## Features
 
 - 🐳 Real-time Docker container log streaming
+- 🧠 AI-powered log analysis with Google Gemini
 - 🎯 Manual container selection by name
 - 🔍 Live log search and filtering
 - 📱 Responsive design for all devices
@@ -16,6 +17,14 @@ A real-time web-based Docker container log monitoring application with manual co
 - 🏷️ Log filtering by level (error, warning, info, debug)
 - 🔒 Secure WebSocket connections with JWT tokens
 - ⚙️ Container state filtering (running, stopped, etc.)
+
+### AI Analysis Features
+- 🤖 Intelligent error pattern detection
+- 📊 Performance bottleneck identification  
+- 🛡️ Security threat analysis
+- 💡 Automated recommendations
+- 📈 Real-time log classification
+- 🎯 Anomaly detection
 
 ## Quick Start
 
@@ -99,6 +108,11 @@ npm run build:docker
 - `AUTH_PASSWORD`: Login password (default: changeme)
 - `JWT_SECRET`: Secret key for JWT tokens (default: auto-generated, change in production)
 
+### AI Analysis (Optional)
+- `GEMINI_API_KEY`: Google Gemini API key for AI-powered log analysis
+  - Get your key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+  - Can also be configured in the web interface
+
 ## Docker Socket Access
 
 The application requires access to the Docker daemon socket (`/var/run/docker.sock`) to:
@@ -115,7 +129,29 @@ The application requires access to the Docker daemon socket (`/var/run/docker.so
 - `GET /api/verify` - Verify authentication token
 - `GET /api/containers` - List filtered containers (requires authentication)
 - `GET /api/health` - Health check endpoint
+- `GET /api/gemini-key` - Get server-configured Gemini API key (optional)
 - `WebSocket /ws` - Real-time log streaming (requires authentication)
+
+## AI Analysis Setup
+
+### Option 1: Web Interface Setup (Recommended)
+1. Login to DockLens dashboard
+2. Click "Setup Gemini AI Analysis" 
+3. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+4. Enter the key and click "Connect Gemini AI"
+
+### Option 2: Server Environment Variable
+Set `GEMINI_API_KEY` in your environment or docker-compose.yml:
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### AI Analysis Capabilities
+- **Error Analysis**: Detect patterns, categorize errors, identify root causes
+- **Performance Insights**: Find bottlenecks, resource usage patterns, optimization suggestions  
+- **Security Analysis**: Threat detection, vulnerability assessment, compliance checking
+- **Real-time Classification**: Automatic log level and category detection
+- **Intelligent Recommendations**: Actionable insights based on log patterns
 
 ## Security Features
 
