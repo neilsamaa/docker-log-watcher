@@ -19,8 +19,12 @@ export const GeminiSetup: React.FC<GeminiSetupProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (apiKey.trim()) {
-      onApiKeySubmit(apiKey.trim());
+    const trimmedKey = apiKey.trim();
+    if (trimmedKey && trimmedKey.length > 10) {
+      onApiKeySubmit(trimmedKey);
+    } else {
+      // You could add a local error state here if needed
+      console.error('Invalid API key format');
     }
   };
 
@@ -50,6 +54,7 @@ export const GeminiSetup: React.FC<GeminiSetupProps> = ({
           <li>2. Sign in with your Google account</li>
           <li>3. Click "Create API Key" and copy it</li>
           <li>4. Paste the key below to enable AI-powered log analysis</li>
+          <li className="mt-2 text-blue-600 font-medium">Note: API key should start with "AIza" and be about 39 characters long</li>
         </ol>
       </div>
 

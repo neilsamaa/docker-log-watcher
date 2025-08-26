@@ -16,6 +16,11 @@ export const useGeminiAnalysis = (apiKey: string | null) => {
       return false;
     }
 
+    if (apiKey.trim().length < 10) {
+      setError('Invalid API key format. Please check your Gemini API key.');
+      return false;
+    }
+
     try {
       const geminiService = new GeminiLogAnalysisService(apiKey);
       const initialized = await geminiService.initialize();
@@ -30,7 +35,10 @@ export const useGeminiAnalysis = (apiKey: string | null) => {
         return false;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown initialization error';
+      setError(errorMessage);
+      setService(null);
+      setIsInitialized(false);
       return false;
     }
   }, [apiKey]);

@@ -7,6 +7,9 @@ export class GeminiLogAnalysisService {
   private isInitialized: boolean = false;
 
   constructor(apiKey: string) {
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error('API key is required');
+    }
     this.genAI = new GoogleGenerativeAI(apiKey);
     // Using Gemini Pro for text-based log analysis
     this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -14,13 +17,36 @@ export class GeminiLogAnalysisService {
 
   async initialize(): Promise<boolean> {
     try {
-      // Test the connection
-      const result = await this.model.generateContent("Test connection");
-      this.isInitialized = true;
-      return true;
-    } catch (error) {
+      // Test the connection with a simple prompt
+      const result = await this.model.generateContent("Hello, respond with 'OK' if you can read this.");
+      const response = await result.response;
+      const text = response.text();
+      
+      if (text && text.trim().length > 0) {
+        this.isInitialized = true;
+        console.log('Gemini AI initialized successfully');
+        return true;
+      } else {
+        throw new Error('Empty response from Gemini API');
+      }
+    } catch (error: any) {
       console.error('Failed to initialize Gemini AI:', error);
-      this.isInitialized = false;
+      this.isInitialized = true;
+      
+      // Provide more specific error messages
+      if (error.message?.includes('API_KEY_INVALID')) {
+        throw new Error('Invalid API key. Please check your Gemini API key.');
+      } else if (error.message?.includes('PERMISSION_DENIED')) {
+        throw new Error('Permission denied. Please ensure your API key has the correct permissions.');
+      } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+        throw new Error('API quota exceeded. Please check your Gemini API usage limits.');
+      } else if (error.message?.includes('NETWORK')) {
+        throw new Error('Network error. Please check your internet connection.');
+      } else {
+        throw new Error(`Gemini AI initialization failed: ${error.message || 'Unknown error'}`);
+      }
+    }
+  }
       return false;
     }
   }
